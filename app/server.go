@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -22,16 +24,22 @@ func main() {
 		fmt.Println("Error accepting connection: ", err.Error())
 		os.Exit(1)
 	}
+	handleConnection(conn)
+
+}
+
+func handleConnection(conn net.Conn) {
+	reader := bufio.NewReader(conn)
 	for {
-		var input []byte
-		_, err := conn.Read(input)
+		data, err := reader.ReadString('\n')
 		if err != nil {
 			return
 		}
-		_, err = conn.Write([]byte("+PONG\r\n"))
-		if err != nil {
-			return
+		if strings.ToLower(data) == "ping" {
+			_, err = conn.Write([]byte("+PONG\r\n"))
+			if err != nil {
+				return
+			}
 		}
 	}
-
 }
