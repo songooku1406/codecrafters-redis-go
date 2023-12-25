@@ -35,6 +35,7 @@ func handleConnection(conn net.Conn) {
 		if err != nil {
 			return
 		}
+		data = strings.TrimSpace(data)
 		if strings.ToLower(data) == "ping" {
 			_, err = conn.Write([]byte("+PONG\r\n"))
 			if err != nil {
