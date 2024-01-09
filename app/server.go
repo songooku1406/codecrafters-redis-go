@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"io"
 	"strings"
+	"strconv"
 )
 
 func main() {
@@ -32,17 +34,37 @@ func main() {
 
 func handleConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
+	writer := bufio.NewWriter(conn)
 	for {
-		data, err := reader.ReadString('\n')
+		fmt.Println("Reading connection")
+		b, err := reader.ReadByte()
+		if err == io.EOF {
+			return
+		}
+		if b != '*' {
+			fmt.Println(b)
+			fmt.Println("Not supported")
+			os.Exit(1)
+		}
+		n, err := reader.ReadString('\n')
 		if err != nil {
 			return
 		}
-		data = strings.TrimSpace(data)
-		if data == "ping" {
-			_, err = conn.Write([]byte("+PONG\r\n"))
-			if err != nil {
-				return
-			}
+		numberArgs, _ := strconv.Atoi(n[:len(n)-2])
+		var args []string
+		for i := 0; i < numberArgs; i++ {
+			_, _ = reader.ReadString('\n')
+			arg, _ := reader.ReadString('\n')
+			args = append(args, arg[:len(arg)-2])
 		}
+		switch command := strings.ToLower(args[0]); command {
+		case "ping":
+			_, _ = writer.Write([]byte("+PONG\r\n"))
+		case "echo":
+			_, _ = writer.Write([]byte(fmt.Sprintf("+%v\r\n", args[1])))
+		default:
+			_, _ = writer.Write([]byte("+PONG\r\n"))
 	}
+	writer.Flush()
+}
 }
