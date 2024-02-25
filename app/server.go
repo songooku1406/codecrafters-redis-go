@@ -43,7 +43,7 @@ func NewKVStoreImpl() KVStore {
 }
 
 func (v *Value) isExpired() bool {
-    return time.Now().UnixMilli() > v.ttl
+    return v.ttl != -1 && time.Now().UnixMilli() > v.ttl
 }
 
 func main() {
